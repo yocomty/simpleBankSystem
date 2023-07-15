@@ -1,0 +1,200 @@
+import tkinter as tk
+from tkinter import messagebox
+
+
+class BankAccount:
+    def __init__(self, name, account_number, balance):
+        self.name = name
+        self.account_number = account_number
+        self.balance = balance
+
+    def deposit(self, amount):
+        self.balance += amount
+
+    def withdraw(self, amount):
+        if amount > self.balance:
+            raise ValueError("Insufficient funds")
+        else:
+            self.balance -= amount
+
+
+def open_welcome_screen():
+    window = tk.Tk()
+    window.title("Welcome")
+
+    tk.Label(window, text="Welcome to the Bank", font=("Helvetica", 16, "bold")).pack(pady=20)
+
+    tk.Button(window, text="Create New Account", font=("Helvetica", 12), command=open_create_account_window).pack(
+        pady=10)
+    tk.Button(window, text="Existing Customer", font=("Helvetica", 12), command=open_existing_customer_window).pack(
+        pady=10)
+    tk.Button(window, text="Exit", font=("Helvetica", 12), command=window.destroy).pack(pady=10)
+
+    window.mainloop()
+
+
+def open_create_account_window():
+    window = tk.Tk()
+    window.title("Create Account")
+
+    tk.Label(window, text="Create New Account", font=("Helvetica", 16, "bold")).pack(pady=20)
+
+    name_label = tk.Label(window, text="Name:", font=("Helvetica", 12))
+    name_entry = tk.Entry(window, font=("Helvetica", 12))
+    account_number_label = tk.Label(window, text="Account Number:", font=("Helvetica", 12))
+    account_number_entry = tk.Entry(window, font=("Helvetica", 12))
+    balance_label = tk.Label(window, text="Balance:", font=("Helvetica", 12))
+    balance_entry = tk.Entry(window, font=("Helvetica", 12))
+
+    name_label.pack()
+    name_entry.pack(pady=5)
+    account_number_label.pack()
+    account_number_entry.pack(pady=5)
+    balance_label.pack()
+    balance_entry.pack(pady=5)
+
+    tk.Button(window, text="Create Account", font=("Helvetica", 12),
+              command=lambda: create_account(window, name_entry.get(), account_number_entry.get(),
+                                             balance_entry.get())).pack(pady=10)
+    tk.Button(window, text="Back", font=("Helvetica", 12), command=window.destroy).pack(pady=10)
+
+    window.mainloop()
+
+
+def create_account(window, name, account_number, balance):
+    # Check if the account name already exists
+    if is_account_name_exists(name):
+        messagebox.showinfo("Account Creation Failed",
+                            "Account name already exists. Please choose a different account name.")
+        return
+
+    # Write the new account details to the file
+    with open("accounts.txt", "a") as file:
+        file.write(f"{name}, {account_number}, {balance}\n")
+    window.destroy()
+    open_success_screen()
+
+
+def is_account_name_exists(name):
+    with open("accounts.txt", "r") as file:
+        for account in file:
+            details = account.split(", ")
+            if details[0] == name:
+                return True
+    return False
+
+
+def is_account_number_exists(account_number):
+    with open("accounts.txt", "r") as file:
+        for account in file:
+            details = account.split(", ")
+            if details[1] == account_number:
+                return True
+    return False
+
+
+def open_success_screen():
+    window = tk.Tk()
+    window.title("Success")
+
+    tk.Label(window, text="New account created successfully!", font=("Helvetica", 16, "bold")).pack(pady=20)
+
+    tk.Button(window, text="Back", font=("Helvetica", 12), command=window.destroy).pack(pady=10)
+    tk.Button(window, text="Exit", font=("Helvetica", 12), command=window.destroy).pack(pady=10)
+
+    window.mainloop()
+
+
+def open_existing_customer_window():
+    window = tk.Tk()
+    window.title("Existing Customer")
+
+    tk.Label(window, text="Existing Customer", font=("Helvetica", 16, "bold")).pack(pady=20)
+
+    account_number_label = tk.Label(window, text="Account Number:", font=("Helvetica", 12))
+    account_number_entry = tk.Entry(window, font=("Helvetica", 12))
+
+    account_number_label.pack()
+    account_number_entry.pack(pady=10)
+
+    tk.Button(window, text="Verify Account", font=("Helvetica", 12),
+              command=lambda: verify_account(account_number_entry.get())).pack(pady=10)
+    tk.Button(window, text="Back", font=("Helvetica", 12), command=window.destroy).pack(pady=10)
+    tk.Button(window, text="Exit", font=("Helvetica", 12), command=window.destroy).pack(pady=10)
+
+    window.mainloop()
+
+
+def verify_account(account_number):
+    with open("accounts.txt", "r") as file:
+        for account in file:
+            details = account.split(", ")
+            if details[1] == account_number:
+                balance = float(details[2].strip())
+                show_balance(account_number, balance)
+                return
+        print("Account not found")
+
+
+def show_balance(account_number, balance):
+    window = tk.Tk()
+    window.title("Account Balance")
+
+    tk.Label(window, text=f"Account Number: {account_number}", font=("Helvetica", 14, "bold")).pack(pady=20)
+    tk.Label(window, text=f"Balance: {balance}", font=("Helvetica", 12)).pack(pady=10)
+
+    tk.Button(window, text="Deposit", font=("Helvetica", 12),
+              command=lambda: open_transaction_window(account_number, "Deposit")).pack(pady=10)
+    tk.Button(window, text="Withdraw", font=("Helvetica", 12),
+              command=lambda: open_transaction_window(account_number, "Withdraw")).pack(pady=10)
+    tk.Button(window, text="Back", font=("Helvetica", 12), command=window.destroy).pack(pady=10)
+
+    window.mainloop()
+
+
+def open_transaction_window(account_number, transaction_type):
+    window = tk.Tk()
+    window.title(transaction_type)
+
+    tk.Label(window, text=transaction_type, font=("Helvetica", 16, "bold")).pack(pady=20)
+
+    amount_label = tk.Label(window, text="Amount:", font=("Helvetica", 12))
+    amount_entry = tk.Entry(window, font=("Helvetica", 12))
+
+    amount_label.pack()
+    amount_entry.pack(pady=10)
+
+    tk.Button(window, text=transaction_type, font=("Helvetica", 12),
+              command=lambda: perform_transaction(account_number, transaction_type, amount_entry.get(), window)).pack(
+        pady=10)
+    tk.Button(window, text="Back", font=("Helvetica", 12), command=window.destroy).pack(pady=10)
+
+    window.mainloop()
+
+
+def perform_transaction(account_number, transaction_type, amount, window):
+    with open("accounts.txt", "r") as file:
+        accounts = [account for account in file]
+    for index, account in enumerate(accounts):
+        details = account.split(", ")
+        if details[1] == account_number:
+            balance = float(details[2].strip())
+            if transaction_type == "Withdraw":
+                if float(amount) > balance:
+                    print("Insufficient funds")
+                else:
+                    balance -= float(amount)
+                    details[2] = str(balance) + "\n"
+            else:  # Deposit
+                balance += float(amount)
+                details[2] = str(balance) + "\n"
+            accounts[index] = ", ".join(details)
+            with open("accounts.txt", "w") as file:
+                file.writelines(accounts)
+            print(f"{transaction_type} successful")
+            window.destroy()
+            return
+    print("Account not found")
+
+
+open_welcome_screen()
